@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Bill Digitizer</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f5f6fa;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .container {
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      width: 400px;
+      padding: 25px;
+      text-align: center;
+    }
+    h2 {
+      color: #222f3e;
+      margin-bottom: 10px;
+    }
+    input[type="file"] {
+      border: 1px solid #ccc;
+      padding: 8px;
+      width: 100%;
+      border-radius: 8px;
+      margin-bottom: 15px;
+    }
+    button {
+      display: block;
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 15px;
+      cursor: pointer;
+    }
+    .analyze {
+      background-color: #007bff;
+      color: white;
+    }
+    .analyze:hover { background-color: #0056b3; }
+    .download {
+      background-color: #10ac84;
+      color: white;
+    }
+    .download:hover { background-color: #0e8d6f; }
+    pre {
+      text-align: left;
+      background: #f1f2f6;
+      padding: 10px;
+      border-radius: 8px;
+      max-height: 200px;
+      overflow-y: auto;
+      font-size: 13px;
+      margin-top: 15px;
+    }
+    #learningBox {
+      margin-top: 15px;
+      text-align: left;
+      background-color: #f8f9fa;
+      border: 1px solid #ddd;
+      padding: 10px;
+      border-radius: 8px;
+    }
+    #learningBox input {
+      margin-bottom: 8px;
+      width: 90%;
+      padding: 6px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+    label {
+      font-size: 14px;
+      font-weight: 500;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>AI Bill Digitizer</h2>
+    <input type="file" id="fileInput" accept="image/*" />
+    <button class="analyze" id="analyzeBtn">Analyze Bill 🧾</button>
+    <button class="download" id="downloadBtn" style="display:none;">Download CSV 📊</button>
+    <pre id="output">Upload a bill image to start...</pre>
+
+    <!-- Learning Section -->
+    <div id="learningBox" style="display:none;">
+      <h4>Teach New Shortforms 🧠</h4>
+      <div id="newWords"></div>
+      <button id="saveWords" class="download">Save Meanings</button>
+    </div>
+  </div>
+
+  <script>
+    const analyzeBtn = document.getElementById("analyzeBtn");
+    const fileInput = document.getElementById("fileInput");
+    const output = document.getElementById("output");
+    const downloadBtn = document.getElementById("downloadBtn");
+    const learnBox = document.getElementById("learningBox");
+    const newWordsDiv = document.getElementById("newWords");
+    const saveBtn = document.getElementById("saveWords");
+
+    analyzeBtn.onclick = async () => {
+      const file = fileInput.files[0];
+      if (!file) {
+        alert("Please select an image file first.");
+        return;
+      }
+
+      output.textContent = "Processing... please wait ⏳";
+      learnBox.style.display = "none";
+      newWordsDiv.innerHTML = "";
+
+      const formData = new FormData();
+      formData.append("file", file);
+
+      try {
+        const response = await fetch("http://127.0.0.1:8000/upload", {
+          method: "POST",
+          body: formData,
+        });
+        if (!response.ok) throw new Error("Upload failed");
+        const data = await response.json();
+
+        // Display main results
+        output.textContent =
+          "✅ Extracted Lines:\n" +
+          data.extracted_lines.join("\n") +
+          "\n\n🧠 Normalized Lines:\n" +
+          data.normalized_lines.join("\n");
+
+        downloadBtn.style.display = "block";
+        downloadBtn.onclick = () => downloadCSV(data.normalized_lines);
+
+        // If new unknown words found, show learning section
+        if (data.unknown_words && data.unknown_words.length > 0) {
+          newWordsDiv.innerHTML = "";
+          data.unknown_words.forEach(w => {
+            newWordsDiv.innerHTML += `
+              <label>${w}: </label>
+              <input type="text" id="input_${w}" placeholder="Enter full form"><br>`;
+          });
+          learnBox.style.display = "block";
+
+          saveBtn.onclick = async () => {
+            const newDict = {};
+            data.unknown_words.forEach(w => {
+              const val = document.getElementById("input_" + w).value.trim();
+              if (val) newDict[w] = val;
+            });
+
+            if (Object.keys(newDict).length === 0) {
+              alert("Please fill at least one meaning!");
+              return;
+            }
+
+            await fetch("http://127.0.0.1:8000/abbrev", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(newDict),
+            });
+
+            alert("✅ New shortforms saved! They’ll be recognized next time.");
+            learnBox.style.display = "none";
+          };
+        }
+      } catch (err) {
+        output.textContent = "❌ Error: " + err.message;
+      }
+    };
+
+    function downloadCSV(lines) {
+      const csv = lines.join("\n");
+      const blob = new Blob([csv], { type: "text/csv" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "bill_output.csv";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+  </script>
+</body>
+</html>

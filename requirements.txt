@@ -1,0 +1,9 @@
+fastapi
+uvicorn[standard]
+python-multipart
+aiofiles
+easyocr
+pillow
+pandas
+openpyxl
+
