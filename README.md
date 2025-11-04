@@ -1,5 +1,3 @@
-<<<<<<< HEAD
-\
 # 🧾 AI-Powered Handwritten Sales Bill Digitization and Seamless Accounting Integration for MSMEs
 
 ## 📘 Abstract
@@ -22,32 +20,3 @@ Ultimately, it helps MSMEs transition toward digital operations without disrupti
 ```bash
 git clone https://github.com/<your-username>/AI-Bill-Digitizer.git
 cd AI-Bill-Digitizer
-```
-2. Create a virtual environment and install dependencies
-```bash
-python -m venv venv
-source venv/bin/activate  # or venv\\Scripts\\activate on Windows
-pip install -r requirements.txt
-```
-3. Run the backend API
-```bash
-uvicorn app:app --reload --port 8000
-```
-Open http://localhost:8000/docs for API docs (Swagger UI).
-
----
-## 📁 Included files
-- `app.py` — FastAPI backend with an `/upload` endpoint (placeholder OCR pipeline).
-- `requirements.txt` — Python dependencies.
-- `frontend/index.html` — Minimal web page to upload an image and preview results.
-- `abbrev_dict.json` — Sample editable abbreviation dictionary.
-- `sample_data/` — Folder for sample bill images and example outputs.
-- `scripts/export_to_busy.py` — Example exporter from extracted data to BUSY-compatible CSV/XLSX.
-- `README.md` — This file.
-
----
-## 📜 License
-Academic project for IEEE Mini Project Symposium — reuse with attribution.
-=======
-# AI_Bill_Digitizer
->>>>>>> 29e4cb12d960c98041a598f7b60e31617ed5db44
