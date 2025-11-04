@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 \
 # 🧾 AI-Powered Handwritten Sales Bill Digitization and Seamless Accounting Integration for MSMEs
 
@@ -47,3 +48,6 @@ Open http://localhost:8000/docs for API docs (Swagger UI).
 ---
 ## 📜 License
 Academic project for IEEE Mini Project Symposium — reuse with attribution.
+=======
+# AI_Bill_Digitizer
+>>>>>>> 29e4cb12d960c98041a598f7b60e31617ed5db44
