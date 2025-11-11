@@ -5,6 +5,26 @@ from pathlib import Path
 import io, json
 from PIL import Image
 import uvicorn
+import sqlite3
+
+# === SQL Database Setup ===
+def init_db():
+    """Create SQLite database and table if not exists"""
+    conn = sqlite3.connect("bills.db")
+    cursor = conn.cursor()
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS bills (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        filename TEXT,
+        item_line TEXT,
+        normalized_line TEXT
+    )
+    """)
+    conn.commit()
+    conn.close()
+
+# Initialize the database on app startup
+init_db()
 
 # === Base paths ===
 BASE = Path(__file__).parent
@@ -78,6 +98,20 @@ async def upload_bill(file: UploadFile = File(...)):
         normalized.append(norm)
         new_unknowns.update(unknowns)
 
+    # === Save extracted data to SQLite ===
+    try:
+        conn = sqlite3.connect("bills.db")
+        cursor = conn.cursor()
+        for original, norm in zip(extracted_lines, normalized):
+            cursor.execute(
+                "INSERT INTO bills (filename, item_line, normalized_line) VALUES (?, ?, ?)",
+                (file.filename, original, norm)
+            )
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        print("⚠️ Database error:", e)
+
     response = {
         "filename": file.filename,
         "extracted_lines": extracted_lines,
@@ -87,6 +121,21 @@ async def upload_bill(file: UploadFile = File(...)):
     }
     return JSONResponse(response)
 
+
+# === Fetch Saved Bills (Optional Endpoint) ===
+@app.get("/bills")
+def get_bills():
+    """Fetch all stored bill data from SQLite"""
+    try:
+        conn = sqlite3.connect("bills.db")
+        cursor = conn.cursor()
+        cursor.execute("SELECT id, filename, item_line, normalized_line FROM bills")
+        rows = cursor.fetchall()
+        conn.close()
+        data = [{"id": r[0], "filename": r[1], "item_line": r[2], "normalized_line": r[3]} for r in rows]
+        return JSONResponse(data)
+    except Exception as e:
+        return JSONResponse({"error": str(e)})
 
 # === Abbreviation Dictionary Endpoints ===
 @app.get("/abbrev")

@@ -16,7 +16,8 @@ Ultimately, it helps MSMEs transition toward digital operations without disrupti
 - Export to CSV/XLSX compatible with BUSY
 
 ## ⚙️ Quick Start (local development)
-1. Clone the repository
+
+### 1️⃣ Clone the repository
 ```bash
 git clone https://github.com/<your-username>/AI-Bill-Digitizer.git
 cd AI-Bill-Digitizer
